@@ -1,0 +1,20 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t tpso/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run tpso/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t tpso/multi-client ./client
+  - docker build -t tpso/multi-nginx ./nginx
+  - docker build -t tpso/multi-server ./server
+  - docker build -t tpso/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" -- --password-stdin
+  - docker push tpso/multi-client
+  - docker push tpso/multi-nginx
+  - docker push tpso/multi-server
+  - docker push tpso/multi-worker
